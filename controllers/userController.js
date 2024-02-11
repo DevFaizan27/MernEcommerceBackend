@@ -1,5 +1,7 @@
 import { User } from "../models/userModel.js";
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'
+import 'dotenv/config'
 import { sentEmail } from "../email/sendMail.js";
 import { generateOTP } from "../Functions/generateOtp.js";
 
@@ -55,6 +57,115 @@ export const signupUser = async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 };
+
+//login Controller
+export const loginUser=async(req,res)=>{
+    const{email,password}=req.body;
+    try{
+         //empty Field validation
+         if (!email || !password) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+
+        // Email validation
+        if (!email.includes('@')) {
+            return res.status(400).json({ error: "Please enter a valid email" });
+        }
+
+        //finding user
+        const user=await User.findOne({email});
+        //validating user exist with that email
+        if(!user){
+            return res.status(400).json({error:"User not Found"});
+        }
+
+        //matching user password to de-hash password with bcrypt.compare()
+        const doMatch=await bcrypt.compare(password,user.password);
+
+        if(doMatch){
+            const token=jwt.sign({userId:user.id},process.env.JWT_SECRET,{
+                expiresIn:'7d'
+            })
+            res.status(201).json({token})
+        }else{
+            res.status(400).json({error:'Either Email or password are wrong'})
+        }
+    }catch(error){
+        console.log(error);
+        return res.status(500).json({error:"Internal Server Error"})
+    }
+}
+
+// Controller for resetting password using OTP
+export const resetPasswordOtp = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Find user by email
+        const user = await User.findOne({ email });
+
+        // Check if user exists
+        if (!user) {
+            return res.status(400).json({ error: "User not found" });
+        }
+
+        // Generate new OTP
+        const otp = generateOTP();
+
+        // Update OTP in the user document
+        user.otp = otp;
+        await user.save();
+
+        // Send OTP via email
+        const mailOptions = {
+            email,
+            otp,
+            subject: 'Forgot Password OTP'
+        };
+        await sentEmail(mailOptions);
+
+        return res.status(200).json({ message: "OTP sent successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+// Controller for updating password after OTP verification
+export const updatePassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+
+    try {
+        // Find user by email
+        const user = await User.findOne({ email });
+
+        // Check if user exists
+        if (!user) {
+            return res.status(400).json({ error: "User not found" });
+        }
+
+        // Validate OTP
+        if (user.otp !== otp) {
+            return res.status(400).json({ error: "Invalid OTP" });
+        }
+
+        // Update password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        user.password = hashedPassword;
+        await user.save();
+
+        // Clear OTP after password update
+        // user.otp = undefined;
+        await user.save();
+
+        return res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
+
 
 // controller to resend OTP for an existing user
 export const resendOTP = async (req, res) => {
