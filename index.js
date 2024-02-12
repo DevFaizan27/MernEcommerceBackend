@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { connectToMongo } from "./database/db.js";
 import userRoute from './routes/userRoute.js';
 import cors from 'cors'
+import deleteUnverifiedUsersPeriodically from "./middleware/deleteunverifiedUser.js";
 
 const app=express();
 
@@ -10,6 +11,10 @@ app.use(express.json())
 
 //middleware to handle cors policy
 app.use(cors())
+
+//delete unverified user middleware
+deleteUnverifiedUsersPeriodically();
+
 
 //connecting database 
 connectToMongo()

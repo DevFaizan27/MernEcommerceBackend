@@ -46,10 +46,12 @@ export const signupUser = async (req, res) => {
         const newUser = new User({
             email,
             password: hashedPassword,
-            otp // Save OTP to user object
+            otp ,// Save OTP to user object
+            createdAt: new Date() 
         });
 
         await newUser.save();
+
 
         return res.status(201).json({ message: "OTP sent successfully" });
     } catch (error) {
@@ -82,7 +84,11 @@ export const loginUser=async(req,res)=>{
         //matching user password to de-hash password with bcrypt.compare()
         const doMatch=await bcrypt.compare(password,user.password);
 
-        if(doMatch){
+        //is email verified or not
+        const verifiedEmail=await(user.isVerified)
+        console.log(verifiedEmail)
+
+        if(doMatch&&verifiedEmail){
             const token=jwt.sign({userId:user.id},process.env.JWT_SECRET,{
                 expiresIn:'7d'
             })
@@ -96,8 +102,8 @@ export const loginUser=async(req,res)=>{
     }
 }
 
-// Controller for resetting password using OTP
-export const resetPasswordOtp = async (req, res) => {
+// Controller for sending  OTP to reset password
+ export const resetPasswordOtp = async (req, res) => {
     const { email } = req.body;
 
     try {
