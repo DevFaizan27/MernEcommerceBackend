@@ -13,7 +13,7 @@ const deleteUnverifiedUsersPeriodically = () => {
         } catch (error) {
             console.error('Error deleting unverified users:', error);
         }
-    },60* 60 * 1000); // 1 minute in milliseconds
+    },30*60 * 1000); // 30 minute in milliseconds
 };
 
 export default deleteUnverifiedUsersPeriodically;

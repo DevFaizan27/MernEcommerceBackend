@@ -14,6 +14,16 @@ const userSchema=mongoose.Schema({
          type: String,
         required: true
      },
+     role: {
+        type: String,
+        default: "user",
+        enum: [
+            "admin",
+            "employee",
+            "manager",
+            "user" // Add 'user' as a valid enum value
+        ]
+    },
     isVerified: {
          type: Boolean,
          default: false }
