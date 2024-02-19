@@ -12,11 +12,11 @@ import { generateOTP } from "../Functions/generateOtp.js";
 
 //signup Controller
 export const signupUser = async (req, res) => {
-    const { email, password,role } = req.body;
+    const {name, email, password,role } = req.body;
 
     try {
         // Field validation
-        if (!email || !password) {
+        if (!name||!email || !password) {
             return res.status(400).json({ error: "All fields are required" });
         }
 
@@ -48,6 +48,7 @@ export const signupUser = async (req, res) => {
 
         // Create new user without saving
         const newUser = new User({
+            name,
             email,
             password: hashedPassword,
             otp ,// Save OTP to user object
@@ -60,7 +61,6 @@ export const signupUser = async (req, res) => {
 
         return res.status(201).json({ success: "OTP sent successfully" });
     } catch (error) {
-        console.error(error);
         return res.status(500).send("Internal server error");
     }
 };

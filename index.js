@@ -2,6 +2,7 @@ import express from "express";
 import 'dotenv/config';
 import { connectToMongo } from "./database/db.js";
 import userRoute from './routes/userRoute.js';
+import productRote from './routes/productRoute.js'
 import cors from 'cors'
 import deleteUnverifiedUsersPeriodically from "./middleware/deleteunverifiedUser.js";
 
@@ -25,6 +26,7 @@ app.get('/',(req,res)=>{
 });
 
 app.use('/api/user',userRoute);
+app.use('/api/product',productRote);
 
 
 app.listen(process.env.PORT,()=>{
